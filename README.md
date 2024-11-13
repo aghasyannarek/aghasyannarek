@@ -1,7 +1,6 @@
 <h1 align="center">Hi 👋, I'm Narek</h1>
 <h3 align="center">Frontend developer from Armenia</h3>
-<img align="right" alt="Coding" width=400 src="https://cdn.dribbble.com/users/1446889/screenshots/3587708/dribbble_gif.gif"/>
-
+<img align="right" alt="Coding" width="400" src="https://cdn.dribbble.com/users/116207..."/>
 <p align="left"> <img src="https://komarev.com/ghpvc/?username=aghasyannarek&label=Profile%20views&color=0e75b6&style=flat" alt="aghasyannarek" /> </p>
 
 - 🌱 I’m currently learning **Next.js, C++**
