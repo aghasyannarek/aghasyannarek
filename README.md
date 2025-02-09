@@ -1,4 +1,4 @@
-![MasterHead](https://1.bp.blogspot.com/-7A4WynwLsMw/XbBpCXG8fHI/AAAAAAAAMt4/uOa1bpLskYgrwGbllhSu2SDj_Mig8SXJQCLcBGAsYHQ/s1600/2000_600px.gif)
+![MasterHead](https://www.dropbox.com/scl/fi/h8109zpywa9dkl9853yoz/clideo_editor_4b100a72ef1f405c9a868fa38940dc53.gif?rlkey=dw5r7h9g82zxlu51ig7nkiz8s&st=so18pd8l&dl=0)
 
 <h1 align="center">Hi 👋, I'm Narek</h1>
 <h3 align="center">Frontend developer from Armenia</h3>
