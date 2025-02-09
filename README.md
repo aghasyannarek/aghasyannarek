@@ -1,4 +1,4 @@
-![MasterHead](https://www.dropbox.com/scl/fi/h8109zpywa9dkl9853yoz/clideo_editor_4b100a72ef1f405c9a868fa38940dc53.gif?rlkey=dw5r7h9g82zxlu51ig7nkiz8s&st=so18pd8l&dl=0)
+![MasterHead]([https://www.dropbox.com/scl/fi/h8109zpywa9dkl9853yoz/clideo_editor_4b100a72ef1f405c9a868fa38940dc53.gif?rlkey=dw5r7h9g82zxlu51ig7nkiz8s&st=so18pd8l&dl=0](https://previews.dropbox.com/p/thumb/ACjv-YQQ7z7f8sDg9O7c3zY_y_eoInaefaEvzbXIkQ8D-zRPLtcnmZIa7R6r1XCkN-HG6VY3XPXZtrrvtPXxT5TkB47I0Vwrw_IuccJDR6khve1cfXEKf-6sULzvrgtH2JhS_kshDFRW1Arf1cF1Op8MCKdLgssMGZI6w_Bo2JrYt1GoY-E3UGHna87NE6qyuCzQOGth4Tk174LQtmc--gl5A_48zD8RTEtt1fYoMQygf68WsS7C5FB0-8oOxTuxbvlbQET_FsZztKkNCNt9UkPCjAqwW1c8Pd0-B4469wpIxtg-cXSjfvy70gy7cHwyeITEVIQ3JvDJSqx2Fw8C65B5/p.gif?is_prewarmed=true))
 
 <h1 align="center">Hi 👋, I'm Narek</h1>
 <h3 align="center">Frontend developer from Armenia</h3>
