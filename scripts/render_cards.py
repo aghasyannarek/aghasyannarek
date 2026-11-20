@@ -302,7 +302,7 @@ text{{font-family:Space,sans-serif;fill:{theme['text']};font-weight:400}}
 def hero(profile: dict, theme: dict) -> Card:
     accent = theme["accent"]
     name = profile["name"].split(" ", 1)
-    body = stamp("00 / HELLO", "FRONTEND DEVELOPER · ARMENIA")
+    body = stamp("00 / HELLO", f'{profile.get("role", "Frontend developer").upper()} · {profile["location"].upper()}')
     body += reveal(text(36, 112, name[0], 76, "bold") +
                    text(32, 191, name[1] + "." if len(name) > 1 else "", 76, "bold"), .06)
     body += (f'<path class="smil-trace" d="M38 209H460" pathLength="1" stroke="{accent}" '

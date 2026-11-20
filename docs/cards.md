@@ -1,7 +1,10 @@
 # Profile cards
 
 Edit `profile.json` for the name, one-line biography, skills, links, project copy,
-and palette. Featured projects follow Narek’s public GitHub pins, except repositories listed
+and palette. The `headline` field controls the visible sentence in the hero;
+`role` controls its top label. Editing an image’s `alt` text only changes its
+accessibility description. The generated README is overwritten by each render.
+Featured projects follow Narek’s public GitHub pins, except repositories listed
 in `excluded_repos` (`chart` is excluded). The daily refresh preserves exclusions; optional copy and
 illustration overrides are keyed by repository name in `profile.json`.
 

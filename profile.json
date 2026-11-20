@@ -1,16 +1,17 @@
 {
   "username": "aghasyannarek",
   "name": "Narek Aghasyan",
-  "headline": "Frontend developer from Armenia. Building interfaces with React & TypeScript.",
+  "headline": "Software Engineer | JavaScript | TypeScript | React | Next JS",
   "location": "Armenia",
   "timezone": "Asia/Yerevan",
   "email": "aghasyannarek@gmail.com",
   "linkedin": "https://www.linkedin.com/in/narek-aghasyan-93aa98247/",
   "portrait": null,
   "skills": [
+    "JavaScript",
+    "TypeScript",
     "React",
-    "Next.js",
-    "TypeScript"
+    "Next JS"
   ],
   "theme": {
     "background": "#0d1117",
@@ -60,5 +61,6 @@
   "contributions_since": "2025-01-01",
   "excluded_repos": [
     "chart"
-  ]
+  ],
+  "role": "Software Engineer"
 }
