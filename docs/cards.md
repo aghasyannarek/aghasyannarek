@@ -1,11 +1,12 @@
 # Profile cards
 
 Edit `profile.json` for the name, one-line biography, skills, links, project copy,
-and palette. The five featured projects initially follow Narek’s public GitHub
-pins. The daily refresh follows pin changes automatically; optional copy and
+and palette. Featured projects follow Narek’s public GitHub pins, except repositories listed
+in `excluded_repos` (`chart` is excluded). The daily refresh preserves exclusions; optional copy and
 illustration overrides are keyed by repository name in `profile.json`.
 
-The chosen palette is ink `#101716`, warm white `#F1F4E9`, and lime `#D2F86A`.
+The palette follows GitHub dark: `#0D1117` backgrounds, `#161B22` surfaces,
+`#30363D` borders, `#C9D1D9` text, blue `#58A6FF` accents, and green `#39D353` activity.
 Space Grotesk and IBM Plex Mono are vendored with their SIL Open Font Licenses in
 `assets/fonts/`. Every SVG embeds its own glyph subsets as base64 WOFF data URIs;
 the generator invokes the `pyftsubset` entry module (`python -m fontTools.subset`).
@@ -45,9 +46,14 @@ uses the code illustration. Keep images small so the resulting SVG stays light.
 
 ## Data and daily updates
 
-`data/contributions.json` contains a validated snapshot of 365 consecutive GitHub
-calendar dates ending at `as_of`, plus public pinned repository metadata. No fake
-activity is added. The action runs daily at 02:23 UTC (06:23 in Armenia), or through
+`data/contributions.json` contains every consecutive calendar date from
+`contributions_since` (January 1, 2025) through `as_of`, plus public pinned
+repository metadata. Each calendar year is fetched separately from GitHub’s public
+contribution calendar. Exact daily counts come from the calendar’s accessible
+tooltips, including anonymous private activity the user shares on their profile.
+No private repository names or private repository metadata are requested or saved.
+The refresh validates every expected date before replacing the JSON; an incomplete
+calendar or changed page format fails without erasing the saved history. The action runs daily at 02:23 UTC (06:23 in Armenia), or through
 **Actions → Refresh profile cards → Run workflow**. It refreshes JSON, runs the
 same renderer, and commits the JSON, cards, and generated README. Pushes that
 change the renderer, fonts, workflow, or profile also rebuild. Pull requests test
@@ -69,17 +75,19 @@ python scripts/render_cards.py
 ```
 
 Rendering reads JSON only. `--refresh` is a separate, network-only operation.
-The calendar reflects GitHub’s visibility settings; the workflow token cannot
-read activity in unrelated private repositories. Refresh endpoints use the
-`Asia/Yerevan` timezone; daily counts follow the dates GitHub returns.
+The calendar reflects GitHub’s public contribution visibility settings. It
+includes anonymous private counts when shared publicly; no additional token scope
+is needed for those counts. The built-in workflow token fetches public pinned
+repository metadata through GraphQL. The end date uses `Asia/Yerevan`; daily
+counts follow GitHub’s own calendar dates.
 
-Monthly bars include all calendar months touched by the 365-day interval, so
-there are usually 13 bars. The first and current months are partial. Active days
-have at least one contribution. Current streak counts backwards from `as_of`,
-allowing today’s still-open date to be empty if yesterday was active. The best
-streak is measured within the snapshot. Busiest day uses the earliest date to
-break ties; an empty year displays “No activity yet”. Graph colours use the lime
-palette, scaled against the busiest day; empty dates remain dark.
+Monthly bars and contribution graphs have separate rows for each year since
+2025, preserving readable labels and cells as history grows. Current months are
+partial; future months have no bars. Active days have at least one contribution.
+Current streak counts backwards from `as_of`, allowing today’s still-open date to
+be empty if yesterday was active. Best streak and busiest day cover the entire
+saved history. Busiest-day ties use the earliest date. Empty history displays
+“No activity yet”. Green activity colours scale against the busiest day.
 
 ## Image compatibility and motion
 

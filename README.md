@@ -11,11 +11,7 @@
 </p>
 
 <p>
-<img src="cards/activity.svg" width="100%" alt="Contributions per month: 3 contributions, current streak 1 day, 2 active days. Busiest day: 09 Dec 2025 with 2 contributions. Calendar dates 2025-11-22 to 2026-11-21; boundary months are partial.">
-</p>
-
-<p>
-<a href="https://github.com/aghasyannarek/chart"><img src="cards/repo-chart.svg" width="100%" alt="aghasyannarek/chart: Exploring chart interfaces with React and TypeScript."></a>
+<img src="cards/activity.svg" width="100%" alt="Contributions per month: 1,072 contributions, current streak 1 day, 210 active days. Busiest day: 22 Jul 2026 with 116 contributions. Calendar dates 2025-01-01 to 2026-11-21; boundary months are partial.">
 </p>
 
 <p>
@@ -35,7 +31,7 @@
 </p>
 
 <p>
-<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 3 contributions from 2025-11-22 to 2026-11-21. Lime cells indicate contribution activity; empty dates have zero contributions.">
+<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 1072 contributions from 2025-01-01 to 2026-11-21. Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.">
 </p>
 
 <details>

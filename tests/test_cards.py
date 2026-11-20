@@ -50,6 +50,19 @@ class ContributionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cards.validate_data(value, data["username"])
 
+    def test_public_calendar_preserves_anonymous_counts_and_zeros(self):
+        parser = cards.CalendarParser()
+        parser.feed('<td id="a" data-date="2025-09-01"></td><tool-tip for="a">12 contributions on September 1st.</tool-tip><td id="b" data-date="2025-09-02"></td><tool-tip for="b">No contributions on September 2nd.</tool-tip><td id="c" data-date="2025-09-03"></td><tool-tip for="c">1,234 contributions on September 3rd.</tool-tip>')
+        self.assertEqual(parser.days(), [{"date": "2025-09-01", "count": 12},
+                                         {"date": "2025-09-02", "count": 0},
+                                         {"date": "2025-09-03", "count": 1234}])
+
+    def test_excluded_pins_do_not_reappear(self):
+        profile = {"excluded_repos": ["chart"]}
+        data = {"featured_repos": [{"name": "Chart", "full_name": "user/Chart"},
+                                   {"name": "keep", "full_name": "user/keep"}]}
+        self.assertEqual([repo["name"] for repo in cards.featured_repos(profile, data)], ["keep"])
+
     def test_leap_day_is_preserved(self):
         days = self.days([1, 2, 3], date(2024, 2, 28))
         self.assertEqual(days[1]["date"], "2024-02-29")
@@ -81,7 +94,7 @@ class SvgTests(unittest.TestCase):
 
     def test_heatmap_uses_brand_accent_and_zero_is_empty(self):
         self.assertEqual(cards.heat_color(0, 9, self.theme), self.theme["surface"])
-        self.assertEqual(cards.heat_color(9, 9, self.theme), self.theme["accent"])
+        self.assertEqual(cards.heat_color(9, 9, self.theme), self.theme["contribution"])
 
     def test_readme_contains_three_separately_linked_tiles(self):
         hero = cards.hero(self.profile, self.theme)

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from functools import lru_cache
 from html import escape
+from html.parser import HTMLParser
 import json
 import math
 import os
@@ -26,17 +27,68 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[1]
 SVG_NS = "http://www.w3.org/2000/svg"
 WIDTH = 960
-QUERY = """query($login:String!, $from:DateTime!, $to:DateTime!) {
+QUERY = """query($login:String!) {
   user(login:$login) {
     pinnedItems(first:6, types:REPOSITORY) { nodes { ... on Repository {
       name nameWithOwner description url homepageUrl isPrivate stargazerCount
       primaryLanguage { name }
     } } }
-    contributionsCollection(from:$from, to:$to) { contributionCalendar {
-      weeks { contributionDays { date contributionCount } }
-    } }
   }
 }"""
+
+
+class CalendarParser(HTMLParser):
+    """Read exact counts from GitHub's public calendar, including anonymous activity."""
+    def __init__(self):
+        super().__init__()
+        self.dates, self.counts = {}, {}
+        self.target, self.label = None, []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "td" and "data-date" in attrs and "id" in attrs:
+            self.dates[attrs["id"]] = attrs["data-date"]
+        if tag == "tool-tip" and attrs.get("for"):
+            self.target, self.label = attrs["for"], []
+
+    def handle_data(self, value):
+        if self.target:
+            self.label.append(value)
+
+    def handle_endtag(self, tag):
+        if tag == "tool-tip" and self.target:
+            label = "".join(self.label).strip()
+            match = re.match(r"(No|[\d,]+) contributions? on\b", label)
+            if match:
+                self.counts[self.target] = 0 if match[1] == "No" else int(match[1].replace(",", ""))
+            self.target = None
+
+    def days(self):
+        return [{"date": day, "count": self.counts[key]}
+                for key, day in self.dates.items() if key in self.counts]
+
+
+def public_calendar(username: str, first: date, last: date) -> list[dict]:
+    result = {}
+    for year in range(first.year, last.year + 1):
+        start, end = max(first, date(year, 1, 1)), min(last, date(year, 12, 31))
+        request = urllib.request.Request(
+            f"https://github.com/users/{username}/contributions?from={start}&to={end}",
+            headers={"User-Agent": "github-profile-cards", "Accept-Language": "en-US", "Accept": "text/html"},
+        )
+        with urllib.request.urlopen(request, timeout=45) as response:
+            parser = CalendarParser()
+            parser.feed(response.read().decode("utf-8"))
+        for day in parser.days():
+            if start.isoformat() <= day["date"] <= end.isoformat():
+                result[day["date"]] = day
+    return [result[key] for key in sorted(result)]
+
+
+def featured_repos(profile: dict, data: dict) -> list[dict]:
+    excluded = {name.lower() for name in profile.get("excluded_repos", [])}
+    return [repo for repo in data["featured_repos"]
+            if repo["name"].lower() not in excluded and repo["full_name"].lower() not in excluded]
 
 
 def read_json(path: Path) -> dict:
@@ -64,10 +116,8 @@ def refresh(path: Path, profile: dict) -> None:
         raise ValueError("--refresh needs GH_TOKEN or GITHUB_TOKEN (read access to public GitHub data).")
     zone = ZoneInfo(profile["timezone"])
     today = datetime.now(zone).date()
-    first = today - timedelta(days=364)
-    start = datetime.combine(first, datetime.min.time(), zone).isoformat()
-    end = datetime.combine(today, datetime.max.time(), zone).isoformat()
-    body = {"query": QUERY, "variables": {"login": profile["username"], "from": start, "to": end}}
+    first = date.fromisoformat(profile["contributions_since"])
+    body = {"query": QUERY, "variables": {"login": profile["username"]}}
     request = urllib.request.Request(
         "https://api.github.com/graphql", data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json",
@@ -81,12 +131,7 @@ def refresh(path: Path, profile: dict) -> None:
     if payload.get("errors") or not payload.get("data", {}).get("user"):
         raise ValueError("GitHub returned an incomplete GraphQL response; the saved JSON was not changed.")
     user = payload["data"]["user"]
-    days = sorted(
-        ({"date": day["date"], "count": day["contributionCount"]}
-         for week in user["contributionsCollection"]["contributionCalendar"]["weeks"]
-         for day in week["contributionDays"] if first.isoformat() <= day["date"] <= today.isoformat()),
-        key=lambda day: day["date"],
-    )
+    days = public_calendar(profile["username"], first, today)
     repos = [
         {"name": repo["name"], "full_name": repo["nameWithOwner"], "url": repo["url"],
          "description": repo["description"] or "", "homepage": repo["homepageUrl"] or "",
@@ -95,21 +140,26 @@ def refresh(path: Path, profile: dict) -> None:
         for repo in user["pinnedItems"]["nodes"] if repo and not repo["isPrivate"]
     ]
     snapshot = {"version": 1, "username": profile["username"], "as_of": today.isoformat(),
-                "timezone": profile["timezone"], "source": "https://api.github.com/graphql",
+                "timezone": profile["timezone"], "since": first.isoformat(),
+                "source": f'https://github.com/users/{profile["username"]}/contributions',
                 "days": days, "featured_repos": repos}
+    snapshot["featured_repos"] = featured_repos(profile, snapshot)
     validate_data(snapshot, profile["username"])
     dump_json(path, snapshot)
-    print(f"Refreshed {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}: {len(days)} days, {len(repos)} public pinned projects")
+    print(f"Refreshed {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}: {len(days)} days, {len(snapshot["featured_repos"])} public pinned projects")
 
 
 def validate_data(data: dict, username: str) -> None:
     if data.get("version") != 1 or data.get("username") != username:
         raise ValueError("Contribution JSON version or username does not match profile.json.")
     last = date.fromisoformat(data["as_of"])
-    expected = [(last - timedelta(days=364 - i)).isoformat() for i in range(365)]
+    first = date.fromisoformat(data.get("since", (last - timedelta(days=364)).isoformat()))
+    if first > last:
+        raise ValueError("Contribution history start must not be after as_of.")
+    expected = [(first + timedelta(days=i)).isoformat() for i in range((last - first).days + 1)]
     days = data["days"]
     if [day["date"] for day in days] != expected:
-        raise ValueError("Contribution JSON must contain 365 unique, consecutive dates ending at as_of.")
+        raise ValueError("Contribution JSON must contain every unique, consecutive date from since to as_of.")
     if any(type(day["count"]) is not int or day["count"] < 0 for day in days):
         raise ValueError("Contribution counts must be nonnegative integers.")
     names = set()
@@ -302,11 +352,11 @@ def tiles(profile: dict) -> list[Card]:
 def contributions(data: dict, stats: dict, theme: dict) -> Card:
     first, last = data["days"][0]["date"], data["as_of"]
     body = stamp("02 / ACTIVITY", "CONSISTENCY, IN CONTEXT")
-    body += reveal(text(36, 81, "A year of showing up.", 32, "bold") +
+    body += reveal(text(36, 81, f"Building since {first[:4]}.", 32, "bold") +
                    text(924, 77, f"{first} → {last}", 11, "mono muted", text_anchor="end"), .95)
     busiest = stats["busiest"]
     busiest_day = date.fromisoformat(busiest["date"]).strftime("%d %b %Y") if busiest else "No activity yet"
-    values = [(f'{stats["total"]:,}', "CONTRIBUTIONS", "Last 365 days"),
+    values = [(f'{stats["total"]:,}', "CONTRIBUTIONS", f"Since {first[:4]}"),
               (counted(stats["streak"], "day"), "CURRENT STREAK", f'Best: {counted(stats["longest"], "day")}'),
               (str(stats["active"]), "ACTIVE DAYS", "Days with contributions"),
               (str(busiest["count"]) if busiest else "—", "BUSIEST DAY", busiest_day)]
@@ -316,28 +366,32 @@ def contributions(data: dict, stats: dict, theme: dict) -> Card:
                        text(x, 166, label, 10, "mono muted", letter_spacing=".8") +
                        text(x, 189, detail, 12, "muted"), 1.04 + i * .07)
     body += reveal(text(36, 237, "CONTRIBUTIONS / MONTH", 11, "mono muted", letter_spacing="1"), 1.25)
-    monthly = list(stats["monthly"].items())
-    max_count = max((count for _, count in monthly), default=0)
-    step = 888 / len(monthly)
-    for y in (276, 320, 364):
-        body += f'<path d="M36 {y}H924" class="line" stroke-dasharray="2 6"/>'
-    for i, (month, count) in enumerate(monthly):
-        x, width = 36 + i * step + 7, step - 14
-        height = 88 * count / max(1, max_count)
-        body += rect(x, 276, width, 88, rx=5, fill=theme["surface"])
-        if count:
-            body += (f'<g class="bar" style="animation-delay:{1.3+i*.045:.3f}s"><title>{month}: {count} contributions</title>' +
-                     rect(x, 364 - height, width, height, rx=min(5, height / 2), fill=theme["accent"]) + "</g>")
-        body += reveal(text(x + width / 2, 268, str(count), 11, "mono muted", text_anchor="middle"), 1.4 + i * .045)
-        label = calendar.month_abbr[int(month[5:])]
-        if i in (0, len(monthly) - 1):
-            label += " ’" + month[2:4]
-        body += text(x + width / 2, 389, label, 10, "mono muted", text_anchor="middle")
+    monthly = stats["monthly"]
+    years = sorted({month[:4] for month in monthly})
+    max_count = max(monthly.values(), default=0)
+    step = 830 / 12
+    for row, year in enumerate(years):
+        top = 260 + row * 142
+        body += text(36, top + 52, year, 13, "mono")
+        for y in (top + 12, top + 51, top + 90):
+            body += f'<path d="M94 {y}H924" class="line" stroke-dasharray="2 6"/>'
+        for month_number in range(1, 13):
+            month = f"{year}-{month_number:02d}"
+            x, width = 94 + (month_number - 1) * step + 7, step - 14
+            count = monthly.get(month)
+            if count is not None:
+                height = 78 * count / max(1, max_count)
+                body += rect(x, top + 12, width, 78, rx=5, fill=theme["surface"])
+                if count:
+                    body += (f'<g class="bar" style="animation-delay:{1.3+row*.15+month_number*.025:.3f}s"><title>{month}: {count} contributions</title>' +
+                             rect(x, top + 90 - height, width, height, rx=min(5, height / 2), fill=theme["accent"]) + "</g>")
+                body += reveal(text(x + width / 2, top + 4, str(count), 11, "mono muted", text_anchor="middle"), 1.4 + row*.15 + month_number*.025)
+            body += text(x + width / 2, top + 114, calendar.month_abbr[month_number], 10, "mono muted", text_anchor="middle")
     description = (f'{counted(stats["total"], "contribution")}, current streak {counted(stats["streak"], "day")}, '
                    f'{counted(stats["active"], "active day")}. Busiest day: {busiest_day}' +
                    (f' with {counted(busiest["count"], "contribution")}.' if busiest else ".") +
                    f' Calendar dates {first} to {last}; boundary months are partial.')
-    return Card("activity.svg", "Contributions per month", description, body, 414)
+    return Card("activity.svg", "Contributions per month", description, body, 248 + len(years) * 142)
 
 
 def project_icon(kind: str, theme: dict) -> str:
@@ -374,7 +428,7 @@ def project_icon(kind: str, theme: dict) -> str:
 
 def projects(profile: dict, data: dict, theme: dict) -> list[Card]:
     result = []
-    for i, repo in enumerate(data["featured_repos"]):
+    for i, repo in enumerate(featured_repos(profile, data)):
         custom = profile.get("projects", {}).get(repo["name"], {})
         description = custom.get("description") or repo["description"] or f'A project in {repo["language"]}.'
         # Long API descriptions are wrapped to actual font metrics, never clipped.
@@ -432,7 +486,7 @@ def heat_color(count: int, peak: int, theme: dict) -> str:
         return theme["surface"]
     strength = .3 + .7 * math.sqrt(count / max(1, peak))
     start = tuple(int(theme["surface"][i:i+2], 16) for i in (1, 3, 5))
-    end = tuple(int(theme["accent"][i:i+2], 16) for i in (1, 3, 5))
+    end = tuple(int(theme.get("contribution", theme["accent"])[i:i+2], 16) for i in (1, 3, 5))
     return "#" + "".join(f"{round(a + (b-a)*strength):02x}" for a, b in zip(start, end))
 
 
@@ -440,37 +494,40 @@ def graph(data: dict, stats: dict, theme: dict, delay: float) -> Card:
     body = stamp("∞ / KEEP BUILDING", "THE CONTRIBUTION GRAPH")
     body += reveal(text(36, 79, "Small steps. Visible progress.", 29, "bold") +
                    text(924, 77, f'{stats["total"]} CONTRIBUTIONS', 11, "mono accent", text_anchor="end"), delay)
-    first = date.fromisoformat(data["days"][0]["date"])
-    # Sunday-first, including padding at the ends; no invented future activity.
-    origin = first - timedelta(days=(first.weekday() + 1) % 7)
-    peak = max(day["count"] for day in data["days"])
-    columns = (date.fromisoformat(data["as_of"]) - origin).days // 7 + 1
-    pitch = min(16, 849 / columns)
-    cell_size = pitch - 4
-    previous_month, previous_label_x = None, -100
+    by_year = defaultdict(list)
     for day in data["days"]:
-        current = date.fromisoformat(day["date"])
-        column, row = divmod((current - origin).days, 7)
-        x, y = 70 + column * pitch, 122 + row * 16
-        month = current.strftime("%b")
-        if month != previous_month and x - previous_label_x >= 28:
-            body += text(x, 110, month, 10, "mono muted")
-            previous_label_x = x
-        previous_month = month
-        body += (f'<g class="day" style="animation-delay:{delay+.12+column*.013:.3f}s">'
-                 f'<title>{day["date"]}: {day["count"]} contributions</title>' +
-                 rect(x, y, cell_size, 12, rx=2, fill=heat_color(day["count"], peak, theme)) + "</g>")
-    for y, label in ((147, "M"), (179, "W"), (211, "F")):
-        body += text(36, y, label, 10, "mono muted")
-    body += text(36, 262, f'AS OF {data["as_of"]} · {data["timezone"]}', 10, "mono muted")
-    body += text(738, 262, "LESS", 10, "mono muted")
+        by_year[day["date"][:4]].append(day)
+    peak = max(day["count"] for day in data["days"])
+    for year_index, (year, days) in enumerate(sorted(by_year.items())):
+        top = 104 + year_index * 164
+        first = date(int(year), 1, 1)
+        origin = first - timedelta(days=(first.weekday() + 1) % 7)
+        # Each year gets a full-width calendar, preserving readable cells.
+        body += text(36, top + 12, year, 13, "mono")
+        previous_month = None
+        for day in days:
+            current = date.fromisoformat(day["date"])
+            column, row = divmod((current - origin).days, 7)
+            x, y = 70 + column * 16, top + 48 + row * 16
+            month = current.strftime("%b")
+            if month != previous_month:
+                body += text(x, top + 35, month, 10, "mono muted")
+            previous_month = month
+            body += (f'<g class="day" style="animation-delay:{delay+.12+year_index*.15+column*.013:.3f}s">'
+                     f'<title>{day["date"]}: {day["count"]} contributions</title>' +
+                     rect(x, y, 12, 12, rx=2, fill=heat_color(day["count"], peak, theme)) + "</g>")
+        for row, label in ((1, "M"), (3, "W"), (5, "F")):
+            body += text(36, top + 57 + row * 16, label, 10, "mono muted")
+    footer = 104 + len(by_year) * 164 + 22
+    body += text(36, footer, f'AS OF {data["as_of"]} · {data["timezone"]}', 10, "mono muted")
+    body += text(738, footer, "LESS", 10, "mono muted")
     for i, value in enumerate((0, 1, 4, 7, 10)):
-        body += rect(783 + i * 18, 251, 12, 12, rx=2, fill=heat_color(value, 10, theme))
-    body += text(924, 262, "MORE", 10, "mono muted", text_anchor="end")
+        body += rect(783 + i * 18, footer - 11, 12, 12, rx=2, fill=heat_color(value, 10, theme))
+    body += text(924, footer, "MORE", 10, "mono muted", text_anchor="end")
     return Card("contribution-graph.svg", "GitHub contribution graph",
                 f'{stats["total"]} contributions from {data["days"][0]["date"]} to {data["as_of"]}. '
-                'Lime cells indicate contribution activity; empty dates have zero contributions.',
-                body, 286)
+                'Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.',
+                body, footer + 24)
 
 
 def image_tag(card: Card, prefix: str, width: str = "100%") -> str:
@@ -520,7 +577,7 @@ def main() -> None:
     stats = statistics(data["days"])
     cards = [hero(profile, theme), *tiles(profile), contributions(data, stats, theme),
              *projects(profile, data, theme),
-             graph(data, stats, theme, 2.3 + len(data["featured_repos"]) * .28)]
+             graph(data, stats, theme, 2.3 + len(featured_repos(profile, data)) * .28)]
     static = os.environ.get("STATIC") == "1"
     # Render everything before touching the existing cards.
     rendered = [(card, svg(card, theme, static)) for card in cards]
