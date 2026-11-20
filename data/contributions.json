@@ -2764,19 +2764,10 @@
     },
     {
       "date": "2026-11-21",
-      "count": 2
+      "count": 4
     }
   ],
   "featured_repos": [
-    {
-      "name": "nextjs-dashboard",
-      "full_name": "aghasyannarek/nextjs-dashboard",
-      "url": "https://github.com/aghasyannarek/nextjs-dashboard",
-      "description": "",
-      "homepage": "https://nextjs-dashboard-amber-ten-16.vercel.app",
-      "language": "TypeScript",
-      "stars": 0
-    },
     {
       "name": "Qr-Code-generator",
       "full_name": "aghasyannarek/Qr-Code-generator",

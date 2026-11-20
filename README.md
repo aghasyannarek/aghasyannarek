@@ -11,11 +11,7 @@
 </p>
 
 <p>
-<img src="cards/activity.svg" width="100%" alt="Contributions per month: 1,073 contributions, current streak 1 day, 210 active days. Busiest day: 22 Jul 2026 with 116 contributions. Calendar dates 2025-01-01 to 2026-11-21; boundary months are partial.">
-</p>
-
-<p>
-<a href="https://github.com/aghasyannarek/nextjs-dashboard"><img src="cards/repo-nextjs-dashboard.svg" width="100%" alt="aghasyannarek/nextjs-dashboard: A Next.js dashboard with TypeScript and Tailwind CSS."></a>
+<img src="cards/activity.svg" width="100%" alt="Contributions per month: 1,075 contributions, current streak 1 day, 210 active days. Busiest day: 22 Jul 2026 with 116 contributions. Calendar dates 2025-01-01 to 2026-11-21; boundary months are partial.">
 </p>
 
 <p>
@@ -31,7 +27,7 @@
 </p>
 
 <p>
-<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 1073 contributions from 2025-01-01 to 2026-11-21. Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.">
+<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 1075 contributions from 2025-01-01 to 2026-11-21. Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.">
 </p>
 
 <details>
