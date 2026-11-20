@@ -11,7 +11,7 @@
 </p>
 
 <p>
-<img src="cards/activity.svg" width="100%" alt="Contributions per month: 2 contributions, current streak 0 days, 1 active day. Busiest day: 09 Dec 2025 with 2 contributions. Calendar dates 2025-11-22 to 2026-11-21; boundary months are partial.">
+<img src="cards/activity.svg" width="100%" alt="Contributions per month: 3 contributions, current streak 1 day, 2 active days. Busiest day: 09 Dec 2025 with 2 contributions. Calendar dates 2025-11-22 to 2026-11-21; boundary months are partial.">
 </p>
 
 <p>
@@ -35,7 +35,7 @@
 </p>
 
 <p>
-<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 2 contributions from 2025-11-22 to 2026-11-21. Lime cells indicate contribution activity; empty dates have zero contributions.">
+<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 3 contributions from 2025-11-22 to 2026-11-21. Lime cells indicate contribution activity; empty dates have zero contributions.">
 </p>
 
 <details>
