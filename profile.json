@@ -1,0 +1,46 @@
+{
+  "username": "aghasyannarek",
+  "name": "Narek Aghasyan",
+  "headline": "Frontend developer from Armenia. Building interfaces with React & TypeScript.",
+  "location": "Armenia",
+  "timezone": "Asia/Yerevan",
+  "email": "aghasyannarek@gmail.com",
+  "linkedin": "https://www.linkedin.com/in/narek-aghasyan-93aa98247/",
+  "portrait": null,
+  "skills": ["React", "Next.js", "TypeScript"],
+  "theme": {
+    "background": "#101716",
+    "surface": "#18211f",
+    "border": "#2b3933",
+    "text": "#f1f4e9",
+    "muted": "#a0afa6",
+    "accent": "#d2f86a"
+  },
+  "projects": {
+    "chart": {
+      "description": "Exploring chart interfaces with React and TypeScript.",
+      "tags": ["React", "TypeScript", "Vite"],
+      "icon": "chart"
+    },
+    "nextjs-dashboard": {
+      "description": "A Next.js dashboard with TypeScript and Tailwind CSS.",
+      "tags": ["Next.js", "TypeScript", "Tailwind CSS"],
+      "icon": "dashboard"
+    },
+    "Qr-Code-generator": {
+      "description": "A QR code generator, built with React.",
+      "tags": ["React", "JavaScript", "CSS"],
+      "icon": "qr"
+    },
+    "Quiz-app": {
+      "description": "A quiz app built with JavaScript.",
+      "tags": ["JavaScript", "CSS"],
+      "icon": "quiz"
+    },
+    "Weather-App": {
+      "description": "A weather app built with React and JavaScript.",
+      "tags": ["React", "JavaScript"],
+      "icon": "weather"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "static": false,
+  "as_of": "2026-11-21",
+  "files": [
+    "hero.svg",
+    "link-github.svg",
+    "link-linkedin.svg",
+    "link-email.svg",
+    "activity.svg",
+    "repo-chart.svg",
+    "repo-nextjs-dashboard.svg",
+    "repo-qr-code-generator.svg",
+    "repo-quiz-app.svg",
+    "repo-weather-app.svg",
+    "contribution-graph.svg"
+  ]
+}
