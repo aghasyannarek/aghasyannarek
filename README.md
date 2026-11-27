@@ -11,7 +11,7 @@
 </p>
 
 <p>
-<img src="cards/activity.svg" width="100%" alt="Contributions per month: 1,076 contributions, current streak 1 day, 211 active days. Busiest day: 22 Jul 2026 with 116 contributions. Calendar dates 2025-01-01 to 2026-11-26; boundary months are partial.">
+<img src="cards/activity.svg" width="100%" alt="Contributions per month: 1,076 contributions, current streak 1 day, 211 active days. Busiest day: 22 Jul 2026 with 116 contributions. Calendar dates 2025-01-01 to 2026-11-27; boundary months are partial.">
 </p>
 
 <p>
@@ -27,7 +27,7 @@
 </p>
 
 <p>
-<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 1076 contributions from 2025-01-01 to 2026-11-26. Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.">
+<img src="cards/contribution-graph.svg" width="100%" alt="GitHub contribution graph: 1076 contributions from 2025-01-01 to 2026-11-27. Green cells indicate contribution activity, including anonymous private activity shared on the public GitHub profile.">
 </p>
 
 <details>
